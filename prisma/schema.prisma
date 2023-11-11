@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(uuid())
+
+  page Page[]
+
+  googleCredentials   GoogleCredentials @relation(fields: [googleCredentialsId], references: [id])
+  googleCredentialsId String
+}
+
+model GoogleCredentials {
+  id String @id @default(uuid())
+
+  clientId String
+
+  user User[]
+}
+
+// Card meant to show person image
+model SelfPresentationCard {
+  id String @id @default(uuid())
+
+  title   String
+  content String
+  image   String?
+
+  page Page?
+}
+
+// Card meant to show business image
+model PresentationCard {
+  id String @id @default(uuid())
+
+  title    String
+  subtitle String
+  image    String
+
+  links Link[]
+
+  page Page?
+}
+
+// Card meant to present business service
+model DescriptionCard {
+  id String @id @default(uuid())
+
+  title   String
+  content String
+  image   String?
+
+  page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageId String
+}
+
+model Page {
+  id String @id @default(uuid())
+
+  // Content
+  presentationCard       PresentationCard     @relation(fields: [presentationCardId], references: [id], onDelete: Cascade)
+  presentationCardId     String               @unique
+  selfPresentationCard   SelfPresentationCard @relation(fields: [selfPresentationCardId], references: [id], onDelete: Cascade)
+  selfPresentationCardId String               @unique
+  descriptionCards       DescriptionCard[]
+
+  theme   Theme  @relation(fields: [themeId], references: [id])
+  themeId String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+}
+
+enum Icon {
+  spotify
+  github
+  reddit
+  googleMap
+  whatsapp
+  linkedIn
+  twitter
+  instagram
+  tiktok
+  facebook
+  telegram
+  whatsappBusiness
+
+  unknown
+}
+
+enum LinkPriority {
+  primary
+  secondary
+  none
+}
+
+model Link {
+  id String @id @default(uuid())
+
+  link     String
+  label    String?
+  icon     Icon         @default(unknown)
+  priority LinkPriority
+
+  presentationCard   PresentationCard? @relation(fields: [presentationCardId], references: [id], onDelete: Cascade)
+  presentationCardId String?
+}
+
+model Theme {
+  id String @id @default(uuid())
+
+  background     String
+  primaryColor   String
+  secondaryColor String
+
+  text       String
+  fontFamily String
+
+  page Page[]
+}
